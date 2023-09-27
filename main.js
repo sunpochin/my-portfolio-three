@@ -1,10 +1,9 @@
 import * as THREE from 'https://unpkg.com/three@0.126.1/build/three.module.js';
-
 import { OrbitControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js'
 
 import * as dat from 'dat.gui';
 const gui = new dat.GUI();
-console.log(gui);
+// console.log(gui);
 const world = {
   plane: {
     width: 10,
@@ -22,7 +21,7 @@ const adjustPlane = () => {
     world.plane.widthSegments,
     world.plane.heightSegments);
   const {array} = planeMesh.geometry.attributes.position;
-  console.log('array: ', array);
+  // console.log('array: ', array);
   for (let i = 0; i < array.length; i += 3) {
     const x = array[i];
     const y = array[i + 1];
@@ -44,6 +43,7 @@ gui.add(world.plane, 'heightSegments', 1, 50).onChange(() => {
   adjustPlane();
 });
 
+const raycaster = new THREE.Raycaster();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, 
   window.innerWidth / window.innerHeight, 
@@ -65,10 +65,12 @@ const planeMaterial = new THREE.MeshPhongMaterial({
 });
 const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 scene.add(planeMesh);
-console.log(planeMesh.geometry.attributes.position.array)
+
+new OrbitControls(camera, renderer.domElement);
+camera.position.z = 5;
 
 const {array} = planeMesh.geometry.attributes.position;
-console.log('array: ', array);
+// console.log('array: ', array);
 for (let i = 0; i < array.length; i += 3) {
   // console.log('i: ', i);
   const x = array[i];
@@ -77,29 +79,45 @@ for (let i = 0; i < array.length; i += 3) {
   array[i + 2] = z + Math.random();
 }
 
+console.log(planeMesh.geometry.attributes);
+planeMesh.geometry.setAttribute('color');
+
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(0, 0, 1);
 scene.add(light);
-
 const backLight = new THREE.DirectionalLight(0xffffff, 1);
 backLight.position.set(0, 0, -1);
 scene.add(backLight);
 
-
-new OrbitControls(camera, renderer.domElement);
-
-camera.position.z = 5;
+const mouse = {
+  x: undefined,
+  y: undefined
+};
 
 function animate() {
     requestAnimationFrame(animate);
 
     renderer.render(scene, camera);
-    // planeMesh.rotation.x += 0.03;
-    // boxMesh.rotation.x += 0.02;
-    // boxMesh.rotation.y += 0.02;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(planeMesh);
+    if (intersects.length > 0) {
+      console.log('intersecting');
+    }
 }
 animate();
 
-
+addEventListener('mousemove', (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  // console.log(mouse);
+  // const x = event.clientX;
+  // const y = event.clientY;
+  // const centerX = window.innerWidth / 2;
+  // const centerY = window.innerHeight / 2;
+  // const moveX = x - centerX;
+  // const moveY = y - centerY;
+  // planeMesh.rotation.x = moveY * 0.001;
+  // planeMesh.rotation.y = moveX * 0.001;
+});
 
 
